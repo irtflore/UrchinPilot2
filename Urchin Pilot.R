@@ -3,6 +3,7 @@
 #session: set working directory to whatever file you have the raw data in or do the following
 
 # Basic commands ----------------------------------------------------------
+#wow
 ##This reads out the columns
 str(UrchinPilot)
 ##This summarizes the data
@@ -47,7 +48,7 @@ UrchinPilot<-UrchinPilot %>%
   mutate(Grazing_by_Size = (Kelp.start.weight - Kelp.end.weight)/Size.mm.)
 
 UrchinPilot<-UrchinPilot %>% 
-  mutate(Grazing_Rate = Kelp.start.weight- Kelp.end.weight)
+  mutate(Grazing_Rate = Kelp.start.weight-Kelp.end.weight )
 
 ####   OR
 #UrchinPilot$GrazingRate<-UrchinPilot$Kelp.start.weight-UrchinPilot$Kelp.end.weight
