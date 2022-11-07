@@ -3,7 +3,7 @@
 #session: set working directory to whatever file you have the raw data in or do the following
 
 # Basic commands ----------------------------------------------------------
-#wow
+#super wow!
 ##This reads out the columns
 str(UrchinPilot)
 ##This summarizes the data
