@@ -144,6 +144,11 @@ UrchinPilot1to4<-UrchinPilot1%>%
 model1<-lmer(Grazing_Rate~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + Wet.weight.g. + (1|Trial..), data=UrchinPilot1to4, REML = TRUE)
 summary(model1)
 
+#Create column for grazing by weight
+
+UrchinPilot1to4<-UrchinPilot1to4%>%
+  mutate(Grazing_by_wt=Grazing_Rate/Wet.weight.g.)
+
 model2<-lmer(Grazing_by_wt~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + (1|Trial..), data=UrchinPilot1to4, REML = TRUE)
 summary(model2)
 
@@ -154,12 +159,16 @@ summary(model3)
 UrchinPilot4to6<-UrchinPilot1%>%
   filter(Trial..==c("4","5","6"))
 
+#Grazing_by_wt column
+UrchinPilot4to6<-UrchinPilot4to6%>%
+  mutate(Grazing_by_wt.=Grazing_Rate/Wet.weight.g.)
+
 model1<-lmer(Grazing_Rate~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + Wet.weight.g. + (1|Trial..), data=UrchinPilot4to6, REML = TRUE)
 summary(model1)
 
 #error message Grazing_by_wt doesn't exist
 
-model2<-lmer(Grazing_by_wt~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + (1|Trial..), data=UrchinPilot4to6, REML = TRUE)
+model2<-lmer(Grazing_by_wt.~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + (1|Trial..), data=UrchinPilot4to6, REML = TRUE)
 summary(model2)
 
 ##This is significant for SetTemp and the interaction!
