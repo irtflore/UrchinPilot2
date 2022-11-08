@@ -67,8 +67,8 @@ UrchinPilot1<-UrchinPilot[-c(3,20,21,24,28,47,53,82,97,121,106,130),]
 
 
 #Grouping & Getting average grazing by state and by temp
-UrchinSumStats <- UrchinPilot1 %>%
-  group_by(State.Barren.Kelp., SetTemp)%>%
+UrchinSumStats1 <- UrchinPilot1 %>%
+  group_by(State.Barren.Kelp., SetTemp,)%>%
   summarize(MeanGrazing = mean(Grazing_by_Size),
             StdGrazing = sd(Grazing_by_Size))
 
@@ -115,8 +115,7 @@ ggplot(UrchinPilot1,aes(x=SetTemp,y=Grazing_by_Size, color=State.Barren.Kelp.))+
 
  UP3%>%
  ggplot(mapping =aes(x=SetTemp,y=MeanGrazing,fill=State.Barren.Kelp.))+
-   geom_boxplot()+
-   facet_grid(.~Trial..)
+   geom_boxplot()
  
 
  
@@ -126,4 +125,57 @@ install.packages("lme4")
 install.packages("lsmeans")
 
 
-URCH1<-lmer(Grazing_by_Size~UrchinPilot1$SetTemp+UrchinPilot1$State.Barren.Kel.+UrchinPilot1$State.Barren.Kelp.*UrchinPilot1$SetTemp+(1|UrchinPilot1$Trial..),UrchinPilot1)
+URCH1<-lmer(Grazing_by_Size~SetTemp+State.Barren.Kelp.+State.Barren.Kelp.*SetTemp+(1|Trial..),data=UrchinPilot1)
+
+# kk added ----------------------------------------------------------------
+
+install.packages("lme4")  
+install.packages("lsmeans")
+install.packages("emmeans")
+
+library(lmer4)
+library(lsmeans)
+library(emmeans)
+
+#Just focused on Trials 1-4
+UrchinPilot1to4<-UrchinPilot1%>%
+  filter(Trial.. %in% c("1","2","3","4"))
+
+model1<-lmer(Grazing_Rate~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + Wet.weight.g. + (1|Trial..), data=UrchinPilot1to4, REML = TRUE)
+summary(model1)
+
+model2<-lmer(Grazing_by_wt~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + (1|Trial..), data=UrchinPilot1to4, REML = TRUE)
+summary(model2)
+
+model3<-lmer(Grazing_by_Size~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + (1|Trial..), data=UrchinPilot1to4, REML = TRUE)
+summary(model3)
+
+##Now just looking at trials 4-6
+UrchinPilot4to6<-UrchinPilot1%>%
+  filter(Trial..==c("4","5","6"))
+
+model1<-lmer(Grazing_Rate~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + Wet.weight.g. + (1|Trial..), data=UrchinPilot4to6, REML = TRUE)
+summary(model1)
+
+#error message Grazing_by_wt doesn't exist
+
+model2<-lmer(Grazing_by_wt~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + (1|Trial..), data=UrchinPilot4to6, REML = TRUE)
+summary(model2)
+
+##This is significant for SetTemp and the interaction!
+
+model3<-lmer(Grazing_by_Size~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + (1|Trial..), data=UrchinPilot4to6, REML = TRUE)
+summary(model3)
+
+urchin_lsmeans<- lsmeans(model2, ~SetTemp*State.Barren.Kelp.)
+urchin_lsmeans_summary <- summary(lsmeans(model2, ~SetTemp*State.Barren.Kelp.))
+
+##This isnt working yet!
+summary(urchin_lsmeans)$lsmeans[c("lsmean", "lower.CL", "upper.CL")]
+
+ggplot(urchin_lsmeans_summary, aes(x = SetTemp, y = lsmean)) +
+  geom_line(aes(y = lsmean, group = 1)) +
+  geom_errorbar(aes(ymin = lower.CL, ymax = upper.CL), width = 0.2) +
+  geom_point(aes(y = lsmean), size = 3, shape = 21, fill = "white") +
+  labs(x = "Temperature", y = "Grazing Rate", title = "Urchin Grazing by Temperature", caption = "P=xx") +
+  theme_bw() 
