@@ -36,13 +36,14 @@ UrchinPilot1%>%
 setwd("~/Desktop/R")
 library(tidyverse)
 library(ggplot2)
+library(dplyr)
 UrchinPilot<-read.csv("UrchinPilot.csv")
 
         #  Changing from characters to numbers
 UrchinPilot$Size.mm.<-as.numeric(as.character(UrchinPilot$Size.mm.))
 UrchinPilot$Wet.weight.g.<-as.numeric(as.character(UrchinPilot$Wet.weight.g.))
 UrchinPilot$SetTemp<-as.numeric(as.integer(UrchinPilot$SetTemp))
-UrchinPilot$SetTemp<-as.numeric(UrchinPilot$SetTemp)
+
       #Creating new column(2 ways)
 # Mutate to create new columns
 
@@ -53,6 +54,9 @@ UrchinPilot$Grazing_Rate<- ifelse(UrchinPilot$Grazing_Rate< 0, 0, UrchinPilot$Gr
 
 UrchinPilot<-UrchinPilot %>% 
   mutate(Grazing_by_Size = (Grazing_Rate)/Size.mm.)
+
+UrchinPilot<-UrchinPilot%>%
+  mutate(Grazing_by_weight= Grazing_Rate/Wet.weight.g.)
 
 ####   OR
 #UrchinPilot$GrazingRate<-UrchinPilot$Kelp.start.weight-UrchinPilot$Kelp.end.weight
@@ -66,8 +70,8 @@ str(UrchinPilot1)
 
 UrchinSumStats<- UrchinPilot1 %>%
   group_by(State.Barren.Kelp.,SetTemp)%>%
-  summarize(MeanGrazing = mean(Grazing_by_Size),
-            StdGrazing = sd(Grazing_by_Size))
+  summarize(MeanGrazing = mean(Grazing_by_Size),StdGrazing = sd(Grazing_by_Size))
+
 
 #UP3<-UrchinPilot1%>%
   #group_by(Trial..,State.Barren.Kelp.,SetTemp)%>%
@@ -77,14 +81,14 @@ UrchinSumStats<- UrchinPilot1 %>%
 
 library(ggplot2)
 #Figures for ALL TRIALS combined 
-UrchinSumStats1 %>%
+UrchinSumStats %>%
   ggplot(mapping = aes(x=SetTemp,y=MeanGrazing,color=State.Barren.Kelp.)) + 
   geom_point()+
   geom_errorbar(aes(ymin = MeanGrazing - StdGrazing, ymax = MeanGrazing + StdGrazing)) +
   geom_line()+
   scale_x_continuous(limits = c(10,24), breaks =c(seq(12,21,3)))
 
-UrchinSumStats1%>%
+UrchinSumStats%>%
 ggplot(mapping=aes(x=SetTemp,y=MeanGrazing, color=State.Barren.Kelp.))+
   geom_point()+
   facet_grid(.~State.Barren.Kelp.)+
@@ -115,19 +119,15 @@ ggplot(UrchinPilot1,aes(x=SetTemp,y=Grazing_by_Size, color=State.Barren.Kelp.))+
   UrchinPilot1to4<-UrchinPilot1%>%
     filter(Trial.. %in% c("1","2","3","4"))
 
-    #Create column for grazing by weight
-  
-  UrchinPilot1to4<-UrchinPilot1to4%>%
-    mutate(Grazing_by_wt=Grazing_Rate/Wet.weight.g.)
-
-  #Create mean and std deviation for trials 1-4
+  #Group & Create mean and std deviation for trials 1-4 THIS GROUP BY ISNT WORKING ANYMORE
   UP1TO4<-UrchinPilot1to4 %>%
-  group_by(State.Barren.Kelp.,SetTemp)%>% 
-    summarize(MeanGrazing = mean(Grazing_by_Size),
+  group_by(State.Barren.Kelp.,SetTemp)%>%
+    summarise(MeanGrazing = mean(Grazing_by_Size),
               StdGrazing = sd(Grazing_by_Size))
   
   UPShort<-UrchinPilot1%>%
     filter(Trial..=="1"|Trial..=="2"|Trial..=="3"|Trial..=="4")
+  
   
   #Figure for barren vs kelp for trials 1-4
   ggplot(UPShort,aes(x=SetTemp,y=Grazing_by_Size, color=Trial..))+
@@ -142,10 +142,7 @@ ggplot(UrchinPilot1,aes(x=SetTemp,y=Grazing_by_Size, color=State.Barren.Kelp.))+
   ##Now just looking at trials 4-6   BARREN URCHINS FROM 18C ARE NOT SHOWING UP
   UrchinPilot4to6<-UrchinPilot1 %>%
     filter(Trial..%in% c("4","5","6"))
-  
-  #Grazing_by_wt column
-  UrchinPilot4to6<-UrchinPilot4to6%>%
-    mutate(Grazing_by_wt.=Grazing_Rate/Wet.weight.g.)
+
   
   ##model ran with Emily
   
@@ -163,7 +160,7 @@ ggplot(UrchinPilot1,aes(x=SetTemp,y=Grazing_by_Size, color=State.Barren.Kelp.))+
     geom_bar(stat ="identity")
   
   
-  ## Mean grazing rate by size and standard error
+  ## Group & Mean grazing rate by size and standard error NOT WORKING ANYMORE!!!
   UP4to6<-UrchinPilot4to6 %>%
     group_by(State.Barren.Kelp., SetTemp,)%>%
     summarize(MeanGrazing = mean(Grazing_by_Size),
