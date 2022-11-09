@@ -9,7 +9,7 @@ str(UrchinPilot1)
 ##This summarizes the data
 summary(UrchinPilot)
 #This deletes variables
-rm(list = ("mydata")) 
+rm(list = ("")) 
 #Delete rows 
 ## dataset[-c(row numbers seoparated by commas), (column numbers separted by commas)]
 #To view entire column
@@ -68,8 +68,8 @@ UrchinPilot1<-UrchinPilot[-c(3,47,82,106,130),]
 #Grouping & Getting average grazing by state and by temp NOT SEPARATED BY TRIAL
 str(UrchinPilot1)
 
-UrchinSumStats<- UrchinPilot1 %>%
-  group_by(State.Barren.Kelp.,SetTemp)%>%
+UrchinSumstats<-UrchinPilot1 %>%
+  group_by(State.Barren.Kelp.,SetTemp) %>%
   summarize(MeanGrazing = mean(Grazing_by_Size),StdGrazing = sd(Grazing_by_Size))
 
 
@@ -81,14 +81,14 @@ UrchinSumStats<- UrchinPilot1 %>%
 
 library(ggplot2)
 #Figures for ALL TRIALS combined 
-UrchinSumStats %>%
+UrchinSumstats %>%
   ggplot(mapping = aes(x=SetTemp,y=MeanGrazing,color=State.Barren.Kelp.)) + 
   geom_point()+
   geom_errorbar(aes(ymin = MeanGrazing - StdGrazing, ymax = MeanGrazing + StdGrazing)) +
   geom_line()+
   scale_x_continuous(limits = c(10,24), breaks =c(seq(12,21,3)))
 
-UrchinSumStats%>%
+UrchinSumstats%>%
 ggplot(mapping=aes(x=SetTemp,y=MeanGrazing, color=State.Barren.Kelp.))+
   geom_point()+
   facet_grid(.~State.Barren.Kelp.)+
@@ -118,32 +118,40 @@ ggplot(UrchinPilot1,aes(x=SetTemp,y=Grazing_by_Size, color=State.Barren.Kelp.))+
   #Just focused on Trials 1-4
   UrchinPilot1to4<-UrchinPilot1%>%
     filter(Trial.. %in% c("1","2","3","4"))
+ #OR FILTER THIS WAY
+ ##UPShort<-UrchinPilot1%>%
+  ## filter(Trial..=="1"|Trial..=="2"|Trial..=="3"|Trial..=="4")
 
   #Group & Create mean and std deviation for trials 1-4 THIS GROUP BY ISNT WORKING ANYMORE
-  UP1TO4<-UrchinPilot1to4 %>%
-  group_by(State.Barren.Kelp.,SetTemp)%>%
+ShortTrial<-UrchinPilot1to4 %>%
+  group_by(State.Barren.Kelp.,SetTemp,Trial..)%>%
     summarise(MeanGrazing = mean(Grazing_by_Size),
               StdGrazing = sd(Grazing_by_Size))
   
-  UPShort<-UrchinPilot1%>%
-    filter(Trial..=="1"|Trial..=="2"|Trial..=="3"|Trial..=="4")
-  
-  
-  #Figure for barren vs kelp for trials 1-4
-  ggplot(UPShort,aes(x=SetTemp,y=Grazing_by_Size, color=Trial..))+
-    geom_point()+
-    facet_grid(.~State.Barren.Kelp.)+
-  #  geom_errorbar(aes(ymin = MeanGrazing - StdGrazing, ymax = MeanGrazing + StdGrazing))+
-    scale_x_continuous(limits = c(10,24), breaks =c(seq(12,21,3)))
-  
+#UP1TO4<-UrchinPilot1to4 %>%
+ # group_by(State.Barren.Kelp.,SetTemp)%>%
+  #summarise(MeanGrazing = mean(Grazing_by_Size),
+         #   StdGrazing = sd(Grazing_by_Size))
 
+#Figure for barren vs kelp for trials 1-4
+  ggplot(ShortTrial,aes(x=SetTemp,y=MeanGrazing, color=State.Barren.Kelp.))+
+    geom_point()+
+    facet_grid(.~Trial..)+
+  geom_errorbar(aes(ymin = MeanGrazing - StdGrazing, ymax = MeanGrazing + StdGrazing))+
+    scale_x_continuous(limits = c(10,24), breaks =c(seq(12,21,3)))+
+    scale_color_manual(name="Habitat Type",values=c("coral2","cornflowerblue"))
+  
+  ggplot(ShortTrial,aes(x=SetTemp,y=MeanGrazing, color=State.Barren.Kelp.))+
+    geom_point()+
+    facet_grid(.~Trial..)+
+    #  geom_errorbar(aes(ymin = MeanGrazing - StdGrazing, ymax = MeanGrazing + StdGrazing))+
+    scale_x_continuous(limits = c(10,24), breaks =c(seq(12,21,3)))
 # Trials 4 to 6 -----------------------------------------------------------
 
   ##Now just looking at trials 4-6   BARREN URCHINS FROM 18C ARE NOT SHOWING UP
   UrchinPilot4to6<-UrchinPilot1 %>%
     filter(Trial..%in% c("4","5","6"))
 
-  
   ##model ran with Emily
   
   model2<-lm(Grazing_by_Size~SetTemp*State.Barren.Kelp.+State.Barren.Kelp.*Trial.., data=UrchinPilot4to6)
@@ -154,23 +162,28 @@ ggplot(UrchinPilot1,aes(x=SetTemp,y=Grazing_by_Size, color=State.Barren.Kelp.))+
   
   ggplot(UrchinPilot4to6,aes(x=SetTemp,y=Grazing_by_Size,color=State.Barren.Kelp.))+
     geom_point()+
-    geom_smooth(method = lm)
+    geom_smooth(method = lm)+
+    scale_x_continuous(limits = c(12,21), breaks =c(seq(12,21,3)))+
+    scale_color_manual(name="Habitat Type",values=c("coral2","cornflowerblue")) 
   
   ggplot(UrchinPilot4to6,aes(x=Trial..,y=Grazing_by_Size,))+
     geom_bar(stat ="identity")
   
   
   ## Group & Mean grazing rate by size and standard error NOT WORKING ANYMORE!!!
-  UP4to6<-UrchinPilot4to6 %>%
-    group_by(State.Barren.Kelp., SetTemp,)%>%
+  LongTrial<- UrchinPilot4to6 %>%
+    group_by(State.Barren.Kelp., SetTemp,Trial..)%>%
     summarize(MeanGrazing = mean(Grazing_by_Size),
               StdGrazing = sd(Grazing_by_Size))
   
   #Figure for barren vs kelp for trials 1-4
-  ggplot(UP4to6,aes(x=SetTemp,y=MeanGrazing, color=State.Barren.Kelp.))+
+  ggplot(LongTrial,aes(x=SetTemp,y=MeanGrazing, color=State.Barren.Kelp.))+
     geom_point()+
-    facet_grid(.~State.Barren.Kelp.)+
-    geom_errorbar(aes(ymin = MeanGrazing - StdGrazing, ymax = MeanGrazing + StdGrazing))
+    facet_grid(.~Trial..)+
+    geom_errorbar(aes(ymin = MeanGrazing - StdGrazing, ymax = MeanGrazing + StdGrazing))+
+    scale_color_manual(name="Habitat Type",values=c("coral2","cornflowerblue")) +
+    scale_x_continuous(limits = c(10,23), breaks =c(seq(12,21,3)))
+    
 
 
 # kk added ----------------------------------------------------------------
