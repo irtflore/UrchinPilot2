@@ -5,7 +5,7 @@
 # Basic commands ----------------------------------------------------------
 #super wow!
 ##This reads out the columns
-str(UrchinPilot)
+str(UrchinPilot1)
 ##This summarizes the data
 summary(UrchinPilot)
 #This deletes variables
@@ -42,90 +42,139 @@ UrchinPilot<-read.csv("UrchinPilot.csv")
 UrchinPilot$Size.mm.<-as.numeric(as.character(UrchinPilot$Size.mm.))
 UrchinPilot$Wet.weight.g.<-as.numeric(as.character(UrchinPilot$Wet.weight.g.))
 UrchinPilot$SetTemp<-as.numeric(as.integer(UrchinPilot$SetTemp))
+UrchinPilot$SetTemp<-as.numeric(UrchinPilot$SetTemp)
       #Creating new column(2 ways)
 # Mutate to create new columns
-UrchinPilot<-UrchinPilot %>% 
-  mutate(Grazing_by_Size = (Kelp.start.weight - Kelp.end.weight)/Size.mm.)
 
 UrchinPilot<-UrchinPilot %>% 
   mutate(Grazing_Rate = Kelp.start.weight-Kelp.end.weight )
+
+UrchinPilot$Grazing_Rate<- ifelse(UrchinPilot$Grazing_Rate< 0, 0, UrchinPilot$Grazing_Rate)
+
+UrchinPilot<-UrchinPilot %>% 
+  mutate(Grazing_by_Size = (Grazing_Rate)/Size.mm.)
 
 ####   OR
 #UrchinPilot$GrazingRate<-UrchinPilot$Kelp.start.weight-UrchinPilot$Kelp.end.weight
 #UrchinPilot$Grazing_by_size<-UrchinPilot$GrazingRate/UrchinPilot$Size.mm.
 
-#Deletes rows: These rows had urchins that escaped and did not eat
-UrchinPilot1<-UrchinPilot[-c(3,20,21,24,28,47,53,82,97,121,106,130),]
+#Deletes rows: These rows had urchins that escaped and NA'S for size
+UrchinPilot1<-UrchinPilot[-c(3,47,82,106,130),]
 
-##Group and select certain columns
-# BarrenUrchin<-UrchinPilot %>% 
-#   filter(State.Barren.Kelp. == "B")%>%
-#   select(Urchin.ID,Grazing_by_Size,SetTemp,StandardDevSize)
-# KelpUrchin<-UrchinPilot %>%
-#   filter(State.Barren.Kelp.=="K")%>%
-#   select(Urchin.ID, Grazing_by_Size,SetTemp,StandardDevSize)
+#Grouping & Getting average grazing by state and by temp NOT SEPARATED BY TRIAL
+str(UrchinPilot1)
 
-
-#Grouping & Getting average grazing by state and by temp
-UrchinSumStats1 <- UrchinPilot1 %>%
-  group_by(State.Barren.Kelp., SetTemp,)%>%
+UrchinSumStats<- UrchinPilot1 %>%
+  group_by(State.Barren.Kelp.,SetTemp)%>%
   summarize(MeanGrazing = mean(Grazing_by_Size),
             StdGrazing = sd(Grazing_by_Size))
 
-UP3<-UrchinPilot1%>%
-  group_by(Trial..,State.Barren.Kelp.,SetTemp)%>%
-summarize(MeanGrazing=mean(Grazing_by_Size),StdGrazing=sd(Grazing_by_Size))
+#UP3<-UrchinPilot1%>%
+  #group_by(Trial..,State.Barren.Kelp.,SetTemp)%>%
+#summarize(MeanGrazing=mean(Grazing_by_Size),StdGrazing=sd(Grazing_by_Size))
 
 # Making plots ------------------------------------------------------------
 
-
 library(ggplot2)
-UrchinSumStats %>%
+#Figures for ALL TRIALS combined 
+UrchinSumStats1 %>%
   ggplot(mapping = aes(x=SetTemp,y=MeanGrazing,color=State.Barren.Kelp.)) + 
   geom_point()+
   geom_errorbar(aes(ymin = MeanGrazing - StdGrazing, ymax = MeanGrazing + StdGrazing)) +
   geom_line()+
   scale_x_continuous(limits = c(10,24), breaks =c(seq(12,21,3)))
 
-ggplot(UrchinSumStats,aes(x=SetTemp,y=MeanGrazing, color=State.Barren.Kelp.))+
+UrchinSumStats1%>%
+ggplot(mapping=aes(x=SetTemp,y=MeanGrazing, color=State.Barren.Kelp.))+
   geom_point()+
   facet_grid(.~State.Barren.Kelp.)+
-  geom_errorbar(aes(ymin = MeanGrazing - StdGrazing, ymax = MeanGrazing + StdGrazing))
+  geom_errorbar(aes(ymin = MeanGrazing - StdGrazing, ymax = MeanGrazing + StdGrazing))+
+  scale_x_continuous(limits = c(10,24), breaks =c(seq(12,21,3)))
  
 #To Change the ticks on the x-axis :scale_x_continuous(limits = c(2500, 6500), breaks = c(seq(2500, 6500, 1000))) # set manual axis ticks
 # set the x and y axis range: ylim(180, 220) + #oops cut off some points, need bigger scale #xlim(1000,10000)+ #maybe you know this colony could be bigger or smaller, show the gap 
 
-#While we are on facet things, you can also facet by more than two with "+" like: facet_grid(cat1~cat2+cat3) Could use this to show each trial\
+#Scatteplot separated by trials
 
 ggplot(UrchinPilot1,aes(x=SetTemp,y=Grazing_by_Size, color=State.Barren.Kelp.))+
   geom_point()+
-  facet_grid(State.Barren.Kelp.~Trial..)
+  facet_grid(State.Barren.Kelp.~Trial..)+
+  scale_x_continuous(limits = c(11,22), breaks =c(seq(12,21,3)))
 
-
- UrchinSumStats %>%
+##Bar graph= dont need, but this is what i was hoping to get/ 2 boxplots per temnperature
+ UrchinSumStats1 %>%
   ggplot(mapping=aes( x=SetTemp,fill=State.Barren.Kelp.,y= MeanGrazing))+
-   geom_density()
-  ##geom_bar(stat="identity",position="dodge")+
+   geom_bar(stat="identity",position="dodge")+
   theme_bw()+
   scale_fill_grey()+
   theme(axis.text.x = element_text(angle = 90,vjust = 0.5,hjust = 1))
+
+
+# Trials 1 to 4 -----------------------------------------------------------
+  #Just focused on Trials 1-4
+  UrchinPilot1to4<-UrchinPilot1%>%
+    filter(Trial.. %in% c("1","2","3","4"))
+
+    #Create column for grazing by weight
   
-#This graohs 2 boxplots for 1 x value : ggplot(UrchinSumStats, aes(x =SetTemp, fill= State.))+
-##I need 2 boxplots per temperature treatment, but this keep combining the mean grazing rates of all urchins from barrens and kelp forest. i want to have 
+  UrchinPilot1to4<-UrchinPilot1to4%>%
+    mutate(Grazing_by_wt=Grazing_Rate/Wet.weight.g.)
 
- UP3%>%
- ggplot(mapping =aes(x=SetTemp,y=MeanGrazing,fill=State.Barren.Kelp.))+
-   geom_boxplot()
- 
+  #Create mean and std deviation for trials 1-4
+  UP1TO4<-UrchinPilot1to4 %>%
+  group_by(State.Barren.Kelp.,SetTemp)%>% 
+    summarize(MeanGrazing = mean(Grazing_by_Size),
+              StdGrazing = sd(Grazing_by_Size))
+  
+  UPShort<-UrchinPilot1%>%
+    filter(Trial..=="1"|Trial..=="2"|Trial..=="3"|Trial..=="4")
+  
+  #Figure for barren vs kelp for trials 1-4
+  ggplot(UPShort,aes(x=SetTemp,y=Grazing_by_Size, color=Trial..))+
+    geom_point()+
+    facet_grid(.~State.Barren.Kelp.)+
+  #  geom_errorbar(aes(ymin = MeanGrazing - StdGrazing, ymax = MeanGrazing + StdGrazing))+
+    scale_x_continuous(limits = c(10,24), breaks =c(seq(12,21,3)))
+  
 
- 
- # NIKI HELP ---------------------------------------------------------------
+# Trials 4 to 6 -----------------------------------------------------------
 
-install.packages("lme4")  
-install.packages("lsmeans")
+  ##Now just looking at trials 4-6   BARREN URCHINS FROM 18C ARE NOT SHOWING UP
+  UrchinPilot4to6<-UrchinPilot1 %>%
+    filter(Trial..%in% c("4","5","6"))
+  
+  #Grazing_by_wt column
+  UrchinPilot4to6<-UrchinPilot4to6%>%
+    mutate(Grazing_by_wt.=Grazing_Rate/Wet.weight.g.)
+  
+  ##model ran with Emily
+  
+  model2<-lm(Grazing_by_Size~SetTemp*State.Barren.Kelp.+State.Barren.Kelp.*Trial.., data=UrchinPilot4to6)
+  anova(model2)
+  
+  ##change tank so its reading numbers only not 5A,5B,6A,6B
+  model2<-lm(Grazing_by_Size~SetTemp*State.Barren.Kelp.*Trial..+(1|State.Barren.Kelp.:Tank..), data=UrchinPilot4to6)
+  
+  ggplot(UrchinPilot4to6,aes(x=SetTemp,y=Grazing_by_Size,color=State.Barren.Kelp.))+
+    geom_point()+
+    geom_smooth(method = lm)
+  
+  ggplot(UrchinPilot4to6,aes(x=Trial..,y=Grazing_by_Size,))+
+    geom_bar(stat ="identity")
+  
+  
+  ## Mean grazing rate by size and standard error
+  UP4to6<-UrchinPilot4to6 %>%
+    group_by(State.Barren.Kelp., SetTemp,)%>%
+    summarize(MeanGrazing = mean(Grazing_by_Size),
+              StdGrazing = sd(Grazing_by_Size))
+  
+  #Figure for barren vs kelp for trials 1-4
+  ggplot(UP4to6,aes(x=SetTemp,y=MeanGrazing, color=State.Barren.Kelp.))+
+    geom_point()+
+    facet_grid(.~State.Barren.Kelp.)+
+    geom_errorbar(aes(ymin = MeanGrazing - StdGrazing, ymax = MeanGrazing + StdGrazing))
 
-
-URCH1<-lmer(Grazing_by_Size~SetTemp+State.Barren.Kelp.+State.Barren.Kelp.*SetTemp+(1|Trial..),data=UrchinPilot1)
 
 # kk added ----------------------------------------------------------------
 
@@ -133,21 +182,14 @@ install.packages("lme4")
 install.packages("lsmeans")
 install.packages("emmeans")
 
-library(lmer4)
+library(lme4)
 library(lsmeans)
 library(emmeans)
 
-#Just focused on Trials 1-4
-UrchinPilot1to4<-UrchinPilot1%>%
-  filter(Trial.. %in% c("1","2","3","4"))
 
 model1<-lmer(Grazing_Rate~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + Wet.weight.g. + (1|Trial..), data=UrchinPilot1to4, REML = TRUE)
 summary(model1)
 
-#Create column for grazing by weight
-
-UrchinPilot1to4<-UrchinPilot1to4%>%
-  mutate(Grazing_by_wt=Grazing_Rate/Wet.weight.g.)
 
 model2<-lmer(Grazing_by_wt~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + (1|Trial..), data=UrchinPilot1to4, REML = TRUE)
 summary(model2)
@@ -155,36 +197,37 @@ summary(model2)
 model3<-lmer(Grazing_by_Size~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + (1|Trial..), data=UrchinPilot1to4, REML = TRUE)
 summary(model3)
 
-##Now just looking at trials 4-6
-UrchinPilot4to6<-UrchinPilot1%>%
-  filter(Trial..==c("4","5","6"))
 
-#Grazing_by_wt column
-UrchinPilot4to6<-UrchinPilot4to6%>%
-  mutate(Grazing_by_wt.=Grazing_Rate/Wet.weight.g.)
 
-model1<-lmer(Grazing_Rate~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + Wet.weight.g. + (1|Trial..), data=UrchinPilot4to6, REML = TRUE)
-summary(model1)
 
-#error message Grazing_by_wt doesn't exist
+# EMILY-----------------------------------------------------------------
+#New column that categorizes trials as short or long
 
-model2<-lmer(Grazing_by_wt.~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + (1|Trial..), data=UrchinPilot4to6, REML = TRUE)
+
+AC<-c(rep("s",93),rep("l",46))
+UrchinPilot1$Acclimation<-AC
+
+UPShort<-UrchinPilot1%>%
+  filter(Trial..=="1"|Trial..=="2"|Trial..=="3"|Trial..=="4")
+
+UPShort<-UP1TO36%>%
+  mutate(Grazing_by_wt=Grazing_Rate/Wet.weight.g.)
+
+install.packages("lmerTest")
+library(lmerTest)
+
+model2<-lmer(Grazing_by_Size~SetTemp+State.Barren.Kelp. + (1|Trial..), data=UP1TO36)
 summary(model2)
+anova(model2)
 
-##This is significant for SetTemp and the interaction!
+ggplot(data=UP1TO36,aes(x=Size.mm.,y=Grazing_Rate,color=SetTemp,shape=Acclimation))+
+  geom_point()
 
-model3<-lmer(Grazing_by_Size~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + (1|Trial..), data=UrchinPilot4to6, REML = TRUE)
-summary(model3)
+UP1TO36$SetTemp<-as.numeric(UP1TO36$SetTemp)
 
-urchin_lsmeans<- lsmeans(model2, ~SetTemp*State.Barren.Kelp.)
-urchin_lsmeans_summary <- summary(lsmeans(model2, ~SetTemp*State.Barren.Kelp.))
+install.packages("Rmisc")
+library(Rmisc)
+ Con_Sum1 <- summarySE(data=UP1TO36, measurevar = "Grazing_Rate",
+                      groupvars = c("SetTemp","State.Barren.Kelp.","Acclimation"), na.rm = TRUE)
 
-##This isnt working yet!
-summary(urchin_lsmeans)$lsmeans[c("lsmean", "lower.CL", "upper.CL")]
 
-ggplot(urchin_lsmeans_summary, aes(x = SetTemp, y = lsmean)) +
-  geom_line(aes(y = lsmean, group = 1)) +
-  geom_errorbar(aes(ymin = lower.CL, ymax = upper.CL), width = 0.2) +
-  geom_point(aes(y = lsmean), size = 3, shape = 21, fill = "white") +
-  labs(x = "Temperature", y = "Grazing Rate", title = "Urchin Grazing by Temperature", caption = "P=xx") +
-  theme_bw() 
