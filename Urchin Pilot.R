@@ -38,35 +38,31 @@ library(tidyverse)
 library(ggplot2)
 library(dplyr)
 UrchinPilot<-read.csv("UrchinPilot.csv")
+str(UrchinPilot) #view structure
 
         #  Changing from characters to numbers
 UrchinPilot$Size.mm.<-as.numeric(as.character(UrchinPilot$Size.mm.))
 UrchinPilot$Wet.weight.g.<-as.numeric(as.character(UrchinPilot$Wet.weight.g.))
 UrchinPilot$SetTemp<-as.numeric(as.integer(UrchinPilot$SetTemp))
 
-      #Creating new column(2 ways)
-# Mutate to create new columns
+str(UrchinPilot) #view structure
 
-UrchinPilot<-UrchinPilot %>% 
+# create new column -------------------------------------------------------
+
+UrchinPilot1<-UrchinPilot[-c(3,47,82,106,130),] #Deletes rows: These rows had urchins that escaped and NA'S for size
+
+UrchinPilot2<-UrchinPilot1 %>% #new data set with new column
   mutate(Grazing_Rate = Kelp.start.weight-Kelp.end.weight )
 
-UrchinPilot$Grazing_Rate<- ifelse(UrchinPilot$Grazing_Rate< 0, 0, UrchinPilot$Grazing_Rate)
+UrchinPilot2$Grazing_Rate<- ifelse(UrchinPilot2$Grazing_Rate< 0, 0,  UrchinPilot2$Grazing_Rate) #makes all negative grazing rates zero
 
-UrchinPilot<-UrchinPilot %>% 
+UrchinPilot2<-UrchinPilot2 %>% 
   mutate(Grazing_by_Size = (Grazing_Rate)/Size.mm.)
 
-UrchinPilot<-UrchinPilot%>%
+UrchinPilot2<-UrchinPilot2%>%
   mutate(Grazing_by_weight= Grazing_Rate/Wet.weight.g.)
 
-####   OR
-#UrchinPilot$GrazingRate<-UrchinPilot$Kelp.start.weight-UrchinPilot$Kelp.end.weight
-#UrchinPilot$Grazing_by_size<-UrchinPilot$GrazingRate/UrchinPilot$Size.mm.
-
-#Deletes rows: These rows had urchins that escaped and NA'S for size
-UrchinPilot1<-UrchinPilot[-c(3,47,82,106,130),]
-
 #Grouping & Getting average grazing by state and by temp NOT SEPARATED BY TRIAL
-str(UrchinPilot1)
 
 UrchinSumstats<-UrchinPilot1 %>%
   group_by(State.Barren.Kelp.,SetTemp) %>%
