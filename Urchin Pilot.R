@@ -186,6 +186,8 @@ install.packages("emmeans")
 library(lme4)
 library(lsmeans)
 library(emmeans)
+library(lmerTest)
+library(Rmisc)
 
 #no p value??
 model1<-lmer(Grazing_Rate~SetTemp + Habitat + SetTemp*Habitat + Wet.weight.g. + (1|Trial..), data=UrchinPilot1to4, REML = TRUE)
@@ -201,33 +203,19 @@ summary(model5)
 
 
 # EMILY-----------------------------------------------------------------
-#New column that categorizes trials as short or long
+#not needed but useful
+AC<-c(rep("s",93),rep("l",46)) #it created a vector where the first 93 rows are labeled "s" and 46 rows after labeled "l"
+AC #reads it out
 
+UrchinPilot1$Acclimation<-AC #MAde A NEW COLUMN NAMED ACCLIMATION WITH "S" and "l" where the first 93 lines read "s" and the next 46 read "l"
 
-AC<-c(rep("s",93),rep("l",46)) #unsure of this 
-
-UrchinPilot1$Acclimation<-AC
-
-UPShort<-UrchinPilot1%>%
+#UPShort<-UrchinPilot1%>% #similar to when we created URCHINPILOT1TO4
   filter(Trial..=="1"|Trial..=="2"|Trial..=="3"|Trial..=="4")
 
-UPShort<-UP1TO36%>%
-  mutate(Grazing_by_wt=Grazing_Rate/Wet.weight.g.)
 
-install.packages("lmerTest")
-library(lmerTest)
+# NO IDEAAAAA -------------------------------------------------------------
 
-model2<-lmer(Grazing_by_Size~SetTemp+State.Barren.Kelp. + (1|Trial..), data=UP1TO36)
-summary(model2)
-anova(model2)
 
-ggplot(data=UP1TO36,aes(x=Size.mm.,y=Grazing_Rate,color=SetTemp,shape=Acclimation))+
-  geom_point()
-
-UP1TO36$SetTemp<-as.numeric(UP1TO36$SetTemp)
-
-install.packages("Rmisc")
-library(Rmisc)
  Con_Sum1 <- summarySE(data=UP1TO36, measurevar = "Grazing_Rate",
                       groupvars = c("SetTemp","State.Barren.Kelp.","Acclimation"), na.rm = TRUE)
 
