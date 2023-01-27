@@ -164,40 +164,20 @@ UP1TO4<-UrchinPilot1to4 %>%
     scale_x_continuous(limits = c(10,24), breaks =c(seq(12,21,3)))+
     scale_color_manual(name="Habitat Type",values=c("coral2","cornflowerblue"))
 # Models with emily------------------------------------------------------------------
-
   model2<-lm(Grazing_by_Size~SetTemp*Habitat+Habitat*Trial.., data=UrchinPilot4to6)
   anova(model2)
   
-  ##change tank so its reading numbers only not 5A,5B,6A,6B
   model3<-lm(Grazing_by_Size~SetTemp*Habitat*Trial..+(1|Habitat:Tank..), data=UrchinPilot4to6)
   
-  ggplot(UrchinPilot4to6,aes(x=SetTemp,y=Grazing_by_Size,color=State.Barren.Kelp.))+
+# plots with model --------------------------------------------------------------------
+
+  ggplot(UrchinPilot4to6,aes(x=SetTemp,y=Grazing_by_Size,color=Habitat))+
     geom_point()+
     geom_smooth(method = lm)+
     scale_x_continuous(limits = c(12,21), breaks =c(seq(12,21,3)))+
     scale_color_manual(name="Habitat Type",values=c("coral2","cornflowerblue")) 
   
-  ggplot(UrchinPilot4to6,aes(x=Trial..,y=Grazing_by_Size,))+
-    geom_bar(stat ="identity")
-  
-  
-  ## Group & Mean grazing rate by size and standard error NOT WORKING ANYMORE!!!
-  LongTrial<- UrchinPilot4to6 %>%
-    group_by(State.Barren.Kelp., SetTemp,Trial..)%>%
-    summarize(MeanGrazing = mean(Grazing_by_Size),
-              StdGrazing = sd(Grazing_by_Size))
-  
-  #Figure for barren vs kelp for trials 1-4
-  ggplot(LongTrial,aes(x=SetTemp,y=MeanGrazing, color=State.Barren.Kelp.))+
-    geom_point()+
-    facet_grid(.~Trial..)+
-    geom_errorbar(aes(ymin = MeanGrazing - StdGrazing, ymax = MeanGrazing + StdGrazing))+
-    scale_color_manual(name="Habitat Type",values=c("coral2","cornflowerblue")) +
-    scale_x_continuous(limits = c(10,23), breaks =c(seq(12,21,3)))
-    
-
-
-# kk added ----------------------------------------------------------------
+# kk added more models for trials 1-4----------------------------------------------------------------
 
 install.packages("lme4")  
 install.packages("lsmeans")
@@ -207,25 +187,25 @@ library(lme4)
 library(lsmeans)
 library(emmeans)
 
+#no p value??
+model1<-lmer(Grazing_Rate~SetTemp + Habitat + SetTemp*Habitat + Wet.weight.g. + (1|Trial..), data=UrchinPilot1to4, REML = TRUE)
 
-model1<-lmer(Grazing_Rate~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + Wet.weight.g. + (1|Trial..), data=UrchinPilot1to4, REML = TRUE)
 summary(model1)
 
 
-model2<-lmer(Grazing_by_wt~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + (1|Trial..), data=UrchinPilot1to4, REML = TRUE)
-summary(model2)
+model4<-lmer(Grazing_by_weight~SetTemp + Habitat + SetTemp*Habitat + (1|Trial..), data=UrchinPilot1to4, REML = TRUE)
+summary(model4)
 
-model3<-lmer(Grazing_by_Size~SetTemp + State.Barren.Kelp. + SetTemp*State.Barren.Kelp. + (1|Trial..), data=UrchinPilot1to4, REML = TRUE)
-summary(model3)
-
-
+model5<-lmer(Grazing_by_Size~SetTemp + Habitat + SetTemp*Habitat + (1|Trial..), data=UrchinPilot1to4, REML = TRUE)
+summary(model5)
 
 
 # EMILY-----------------------------------------------------------------
 #New column that categorizes trials as short or long
 
 
-AC<-c(rep("s",93),rep("l",46))
+AC<-c(rep("s",93),rep("l",46)) #unsure of this 
+
 UrchinPilot1$Acclimation<-AC
 
 UPShort<-UrchinPilot1%>%
