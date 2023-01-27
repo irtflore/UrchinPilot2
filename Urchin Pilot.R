@@ -169,7 +169,7 @@ UP1TO4<-UrchinPilot1to4 %>%
   anova(model2)
   
   ##change tank so its reading numbers only not 5A,5B,6A,6B
-  model2<-lm(Grazing_by_Size~SetTemp*Habitat*Trial..+(1|Habitat:Tank..), data=UrchinPilot4to6)
+  model3<-lm(Grazing_by_Size~SetTemp*Habitat*Trial..+(1|Habitat:Tank..), data=UrchinPilot4to6)
   
   ggplot(UrchinPilot4to6,aes(x=SetTemp,y=Grazing_by_Size,color=State.Barren.Kelp.))+
     geom_point()+
